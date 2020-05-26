@@ -17,6 +17,7 @@ limitations under the License.
 #include "node/sink_node.h"
 
 #include "base/logging.h"
+#include "core/print_string.h"
 
 namespace vraudio {
 
@@ -28,6 +29,7 @@ const std::vector<const AudioBuffer*>& SinkNode::ReadInputs() {
 
 void SinkNode::Connect(
     const std::shared_ptr<PublisherNodeType>& publisher_node) {
+  ERR_PRINT("Connecting!!! THis is good")
   input_stream_.Connect(publisher_node->GetSharedNodePtr(),
                         publisher_node->GetOutput());
 }

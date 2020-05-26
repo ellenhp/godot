@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "graph/resonance_audio_api_impl.h"
+#include "core/print_string.h"
 
 #include <algorithm>
 #include <numeric>
@@ -154,8 +155,8 @@ int ResonanceAudioApiImpl::CreateAmbisonicSource(size_t num_channels) {
   if (num_channels < kNumFirstOrderAmbisonicChannels ||
       !IsValidAmbisonicOrder(num_channels)) {
     // Invalid number of input channels, don't create the ambisonic source.
-    LOG(ERROR) << "Invalid number of channels for the ambisonic source: "
-               << num_channels;
+    ERR_PRINT("Invalid number of channels for the ambisonic source: ")
+    // ERR_PRINT(num_channels);
     return kInvalidSourceId;
   }
 
@@ -187,7 +188,7 @@ int ResonanceAudioApiImpl::CreateAmbisonicSource(size_t num_channels) {
 
 int ResonanceAudioApiImpl::CreateStereoSource(size_t num_channels) {
   if (num_channels > kNumStereoChannels) {
-    LOG(ERROR) << "Unsupported number of input channels";
+    ERR_PRINT("Unsupported number of input channels");
     return kInvalidSourceId;
   }
   const int stereo_source_id = source_id_counter_.fetch_add(1);
@@ -272,8 +273,8 @@ void ResonanceAudioApiImpl::SetSourceDistanceAttenuation(
       const auto& rolloff_model = source_parameters->distance_rolloff_model;
       DCHECK_EQ(rolloff_model, DistanceRolloffModel::kNone);
       if (rolloff_model != DistanceRolloffModel::kNone) {
-        LOG(WARNING) << "Implicit distance rolloff model is set. The value "
-                        "will be overwritten.";
+        ERR_PRINT("Implicit distance rolloff model is set. The value "
+                        "will be overwritten.");
       }
       source_parameters->distance_attenuation = distance_attenuation;
     }
@@ -496,19 +497,20 @@ bool ResonanceAudioApiImpl::FillOutputBuffer(size_t num_channels,
 
 
   if (buffer_ptr == nullptr) {
-    LOG(WARNING) << kBadInputPointerMessage;
+    ERR_PRINT(kBadInputPointerMessage);
     return false;
   }
   if (num_channels != kNumStereoChannels) {
-    LOG(WARNING) << "Output buffer must be stereo";
+    ERR_PRINT("Output buffer must be stereo");
     return false;
   }
   const size_t num_input_samples = num_frames * num_channels;
   const size_t num_expected_output_samples =
       system_settings_.GetFramesPerBuffer() * system_settings_.GetNumChannels();
   if (num_input_samples != num_expected_output_samples) {
-    LOG(WARNING) << "Output buffer size must be " << num_expected_output_samples
-                 << " samples";
+    ERR_PRINT("Output buffer size must be ");
+    ERR_PRINT(std::to_string(num_expected_output_samples).c_str());
+                //  << " samples";
     return false;
   }
 
@@ -518,6 +520,7 @@ bool ResonanceAudioApiImpl::FillOutputBuffer(size_t num_channels,
   if (output_buffer == nullptr) {
     // This indicates that the graph processing is triggered without having any
     // connected sources.
+    ERR_PRINT("ERRORRRRR");
     return false;
   }
 

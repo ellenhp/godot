@@ -1,14 +1,16 @@
-#ifndef RESONANCE_H
-#define RESONANCE_H
+#ifndef RESONANCE_AUDIO_SOURCE_H
+#define RESONANCE_AUDIO_SOURCE_H
 
 #include "scene/3d/spatial.h"
 #include "servers/audio/audio_stream.h"
+#include "core/math/audio_frame.h"
 
-class ResonanceAudioSource : public SpatialGizmo {
-    GDCLASS(ResonanceAudioSource, SpatialGizmo);
+class ResonanceAudioSource : public Spatial {
+    GDCLASS(ResonanceAudioSource, Spatial);
 
 protected:
     static void _bind_methods();
+	void _notification(int p_what);
 
 public:
 	ResonanceAudioSource();
@@ -28,13 +30,20 @@ public:
 	void set_stream_paused(bool p_pause);
 	bool get_stream_paused() const;
 
-	virtual void create();
-	virtual void transform();
-	virtual void clear();
-	virtual void redraw();
-	virtual void free();
 
+private:
+	void _get_samples();
+	static void _get_samples_cb(void *self) { reinterpret_cast<ResonanceAudioSource *>(self)->_get_samples(); }
 
+	Ref<AudioStream> stream;
+	Ref<AudioStreamPlayback> stream_playback;
+
+	Vector<AudioFrame> mix_buffer;
+
+	bool active;
+	bool autoplay;
+
+	int source_id;
 };
 
-#endif // RESONANCE_H
+#endif // RESONANCE_AUDIO_SOURCE_H

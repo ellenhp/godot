@@ -192,4 +192,4 @@ env_thirdparty.Append(CPPDEFINES=["TASKING_INTERNAL"])
 env_thirdparty.add_source_files(env.modules_sources, thirdparty_sources)
 
 # Godot source files
-env_resonance.add_source_files(env.modules_sources, ["resonance_audio_source.cpp", "register_types.cpp"])
+env_resonance.add_source_files(env.modules_sources, "*.cpp")

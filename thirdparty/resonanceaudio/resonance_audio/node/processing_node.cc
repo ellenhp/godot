@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "node/processing_node.h"
+#include "core/print_string.h"
 
 namespace vraudio {
 
