@@ -382,6 +382,10 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 
 	if (p_what == NOTIFICATION_INTERNAL_PHYSICS_PROCESS) {
 
+		if (GLOBAL_GET("audio/enable_resonance_audio")) {
+			ResonanceAudioWrapper::get_singleton()->set_source_transform(audio_source_id, get_global_transform());
+		}
+
 		//update anything related to position first, if possible of course
 
 		if (!output_ready) {

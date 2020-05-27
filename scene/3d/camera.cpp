@@ -132,7 +132,7 @@ void Camera::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_TRANSFORM_CHANGED: {
 			if (viewport->is_audio_listener() && GLOBAL_GET("audio/enable_resonance_audio")) {
-				ResonanceAudioWrapper::get_singleton()->set_head_transform(get_transform());
+				ResonanceAudioWrapper::get_singleton()->set_head_transform(get_global_transform());
 			}
 
 			_request_camera_update();
