@@ -700,14 +700,8 @@ void Camera::_process_audio() {
 	}
 	AudioFrame *target = AudioServer::get_singleton()->thread_get_channel_mix_buffer(/* bus_index= */ 0, /* channel_idx= */ 0);
 	size_t num_frames = AudioServer::get_singleton()->thread_get_mix_buffer_size();
-	AudioFrame buffer[num_frames];
-	if (!ResonanceAudioWrapper::get_singleton()->pull_listener_buffer(num_frames, buffer)) {
-		WARN_PRINTS("Audio didn't render correctly :(");
-		return;
-	}
-	for (size_t frame = 0; frame < num_frames; frame++) {
-		WARN_PRINTS("Audio rendered");
-		target[frame] = buffer[frame];
+	if (!ResonanceAudioWrapper::get_singleton()->pull_listener_buffer(num_frames, target)) {
+		WARN_PRINT_ONCE("Audio didn't render correctly :(");
 	}
 }
 
