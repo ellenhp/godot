@@ -705,7 +705,8 @@ void Camera::_process_audio() {
 		WARN_PRINTS("Audio didn't render correctly :(");
 		return;
 	}
-	for (size_t frame; frame < num_frames; frame++) {
+	for (size_t frame = 0; frame < num_frames; frame++) {
+		WARN_PRINTS("Audio rendered");
 		target[frame] = buffer[frame];
 	}
 }
