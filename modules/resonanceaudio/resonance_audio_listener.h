@@ -21,8 +21,6 @@ private:
     bool active;
 	Vector<AudioFrame> mix_buffer;
 
-    vraudio::ResonanceAudioApi* resonance_api;
-
 };
 
 #endif // RESONANCE_AUDIO_LISTENER_H

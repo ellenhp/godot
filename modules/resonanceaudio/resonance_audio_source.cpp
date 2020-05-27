@@ -32,26 +32,28 @@ void ResonanceAudioSource::_notification(int p_what) {
 
 	if (p_what == NOTIFICATION_ENTER_TREE) {
         ERR_PRINT("source entering tree\n");
-        ResonanceAudioServer::get_singleton()->add_source_callback(_get_samples_cb, this);
-        source_id = ResonanceAudioServer::get_singleton()->get_api()->CreateSoundObjectSource(
-            vraudio::RenderingMode::kStereoPanning);
-        ResonanceAudioServer::get_singleton()->get_api()->SetSourceDistanceModel(
+		ResonanceAudioServer* server = ResonanceAudioServer::get_singleton();
+		// server->lock();
+        server->add_source_callback(_get_samples_cb, this);
+        source_id = server->get_api()->CreateSoundObjectSource(
+            vraudio::RenderingMode::kBinauralMediumQuality);
+        server->get_api()->SetSourceDistanceModel(
             source_id,
             vraudio::DistanceRolloffModel::kLinear,
             /* min_distance= */ 0,
-            /* max_distance= */ 0);
-        ResonanceAudioServer::get_singleton()->get_api()->SetSourceVolume(
+            /* max_distance= */ 100);
+        server->get_api()->SetSourceVolume(
             source_id, /* volume= */ 1);
-		if (autoplay && !Engine::get_singleton()->is_editor_hint()) {
-            active = true;
-		}
-
+		// server->unlock();
 	}
 
 	if (p_what == NOTIFICATION_EXIT_TREE) {
-        ResonanceAudioServer::get_singleton()->remove_source_callback(_get_samples_cb, this);
-        ResonanceAudioServer::get_singleton()->get_api()->DestroySource(source_id);
-        active = false;
+		ResonanceAudioServer* server = ResonanceAudioServer::get_singleton();
+		// server->lock();
+        server->remove_source_callback(_get_samples_cb, this);
+        server->get_api()->DestroySource(source_id);
+        // server->unlock();
+		active = false;
     }
 
 	if (p_what == NOTIFICATION_PAUSED) {
@@ -66,13 +68,6 @@ void ResonanceAudioSource::_notification(int p_what) {
 
 	if (p_what == NOTIFICATION_INTERNAL_PHYSICS_PROCESS) {
         // Update the position of the source.
-        Vector3 source_position = get_global_transform().origin;
-        Quat source_rotation = Quat(get_global_transform().basis);
-
-        ResonanceAudioServer::get_singleton()->get_api()->SetSourcePosition(
-            source_id, source_position.x, source_position.y, source_position.z);
-        ResonanceAudioServer::get_singleton()->get_api()->SetSourceRotation(
-            source_id, source_rotation.x, source_rotation.y, source_rotation.z, source_rotation.w);
     }
 }
 
@@ -83,18 +78,12 @@ void ResonanceAudioSource::set_stream(Ref<AudioStream> p_stream) {
 	if (stream_playback.is_valid()) {
 		stream_playback.unref();
 		stream.unref();
-		active = false;
 	}
 
 	if (p_stream.is_valid()) {
     	mix_buffer.resize(AudioServer::get_singleton()->thread_get_mix_buffer_size());
 		stream = p_stream;
 		stream_playback = p_stream->instance_playback();
-	}
-
-	static bool is_playing = false;
-	if (stream_playback != nullptr && !is_playing && active) {
-		stream_playback->start(0.0);
 	}
 
 	AudioServer::get_singleton()->unlock();
@@ -139,6 +128,24 @@ bool ResonanceAudioSource::get_stream_paused() const {
 }
 
 void ResonanceAudioSource::_get_samples() {
+	static bool is_playing = false;
+	if (stream_playback != nullptr && !is_playing && !Engine::get_singleton()->is_editor_hint()) {
+		stream_playback->start(0.0);
+		is_playing = true;
+	} else if (!is_playing) {
+		ERR_PRINT("NOT PLAYING");
+	}
+
+	ResonanceAudioServer* server = ResonanceAudioServer::get_singleton();
+    server->lock();
+	
+	Vector3 source_position = get_global_transform().origin;
+	Quat source_rotation = Quat(get_global_transform().basis);
+
+	server->get_api()->SetSourcePosition(
+		source_id, source_position.x, source_position.y, source_position.z);
+	server->get_api()->SetSourceRotation(
+		source_id, source_rotation.x, source_rotation.y, source_rotation.z, source_rotation.w);
 
 	AudioFrame *buffer = mix_buffer.ptrw();
 	int buffer_size = mix_buffer.size();
@@ -152,7 +159,8 @@ void ResonanceAudioSource::_get_samples() {
         source_buffer[sample * 2 + 1] = buffer[sample].r;
     }
 
-    ResonanceAudioServer::get_singleton()->get_api()->SetInterleavedBuffer(
+    server->get_api()->SetInterleavedBuffer(
         source_id, source_buffer, /* num_channels= */ 2, buffer_size);
 
+	server->unlock();
 }

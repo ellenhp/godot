@@ -2,32 +2,23 @@
 #include "servers/audio_server.h"
 #include <string>
 
-// static Mutex* singleton_lock = Mutex::create();
-
 ResonanceAudioServer* ResonanceAudioServer::singleton = nullptr;
 
-ResonanceAudioServer::ResonanceAudioServer() : resonance_api(nullptr) {
-	api_lock = Mutex::create();
+ResonanceAudioServer::ResonanceAudioServer() {
+	resonance_api = vraudio::CreateResonanceAudioApi(
+		/* num_channels= */ 2, AudioServer::get_singleton()->thread_get_mix_buffer_size(), AudioServer::get_singleton()->get_mix_rate());
+	server_mutex = Mutex::create();
+	singleton = this;
 }
 
 ResonanceAudioServer* ResonanceAudioServer::get_singleton() {
-	// singleton_lock->lock();
-	if (singleton == nullptr) {
-		singleton = new ResonanceAudioServer();
-	}
-	// singleton_lock->unlock();
     return singleton;
 }
 vraudio::ResonanceAudioApi* ResonanceAudioServer::get_api() {
-	api_lock->lock();
-    if (resonance_api == nullptr) {
-        ERR_PRINT(std::to_string(AudioServer::get_singleton()->thread_get_mix_buffer_size()).c_str());
-        ERR_PRINT(std::to_string(AudioServer::get_singleton()->get_mix_rate()).c_str());
-        resonance_api = vraudio::CreateResonanceAudioApi(
-            /* num_channels= */ 2, AudioServer::get_singleton()->thread_get_mix_buffer_size(), AudioServer::get_singleton()->get_mix_rate());
-    }
-	api_lock->unlock();
     return resonance_api;
+}
+Error ResonanceAudioServer::init() {
+	return OK;
 }
 
 void ResonanceAudioServer::add_source_callback(ResonanceCallback p_callback, void *p_userdata) {
@@ -52,4 +43,11 @@ void ResonanceAudioServer::notify_samples_needed() {
 	for (Set<CallbackItem>::Element *E = callbacks.front(); E; E = E->next()) {
 		E->get().callback(E->get().userdata);
     }
+}
+
+void ResonanceAudioServer::lock() {
+	server_mutex->lock();
+}
+void ResonanceAudioServer::unlock() {
+	server_mutex->lock();
 }

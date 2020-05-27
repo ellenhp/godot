@@ -45,18 +45,23 @@ void ResonanceAudioListener::_notification(int p_what) {
 	}
 
 	if (p_what == NOTIFICATION_INTERNAL_PHYSICS_PROCESS) {
-        // Update the position of the listener.
-        Vector3 head_position = get_global_transform().origin;
-        Quat head_rotation = Quat(get_global_transform().basis);
-
-        resonance_api->SetHeadPosition(head_position.x, head_position.y, head_position.z);
-        resonance_api->SetHeadRotation(head_rotation.x, head_rotation.y, head_rotation.z, head_rotation.w);
     }
 }
 
 void ResonanceAudioListener::_mix_audio() {
 
-    ResonanceAudioServer::get_singleton()->notify_samples_needed();
+    ResonanceAudioServer* server = ResonanceAudioServer::get_singleton();
+    server->lock();
+
+    server->notify_samples_needed();
+
+
+    // Update the position of the listener.
+    Vector3 head_position = get_global_transform().origin;
+    Quat head_rotation = Quat(get_global_transform().basis);
+
+    server->get_api()->SetHeadPosition(head_position.x, head_position.y, head_position.z);
+    server->get_api()->SetHeadRotation(head_rotation.x, head_rotation.y, head_rotation.z, head_rotation.w);
 
     // static int count = 10;
     // if (count) {
@@ -64,13 +69,12 @@ void ResonanceAudioListener::_mix_audio() {
     //     return;
     // }
 
-
     AudioFrame *target = AudioServer::get_singleton()->thread_get_channel_mix_buffer(/* bus_index= */ 0, /* channel_idx= */ 0);
 	int buffer_size = AudioServer::get_singleton()->thread_get_mix_buffer_size();
 
     float output_buffer[buffer_size * 2];
 
-    bool did_render = ResonanceAudioServer::get_singleton()->get_api()->FillInterleavedOutputBuffer(
+    bool did_render = server->get_api()->FillInterleavedOutputBuffer(
         /* num_channels= */ 2,  buffer_size, output_buffer);
 
     if (did_render) {
@@ -82,5 +86,7 @@ void ResonanceAudioListener::_mix_audio() {
     else {
         ERR_PRINT("Sound did not render!");
     }
+
+    server->unlock();
 
 }

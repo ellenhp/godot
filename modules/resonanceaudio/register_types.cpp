@@ -9,6 +9,9 @@ void register_resonanceaudio_types() {
     ClassDB::register_class<ResonanceAudioServer>();
     ClassDB::register_class<ResonanceAudioListener>();
     ClassDB::register_class<ResonanceAudioSource>();
+    ResonanceAudioServer* server = memnew(ResonanceAudioServer);
+    server->init();
+
 }
 void unregister_resonanceaudio_types() {
 
