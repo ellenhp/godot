@@ -706,7 +706,7 @@ void Camera::_process_audio() {
 		return;
 	}
 	for (size_t frame; frame < num_frames; frame++) {
-		target[frame] += buffer[frame];
+		target[frame] = buffer[frame];
 	}
 }
 
