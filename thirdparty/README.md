@@ -481,7 +481,7 @@ Files extracted from upstream source:
 
 Files extracted from upstream source:
 
-- `resonance_audio/` folder without `*.test.cpp` and `*test.h`
+- `resonance_audio/` and `platforms/common` folders without `*.test.cpp` and `*test.h`
 - `third_party/SADIE_hrtf_database` folder without `generate_hrtf_assets.py`, `WAV/*` and `hrtf_assets.iad`
 - LICENSE
 - AUTHORS

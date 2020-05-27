@@ -373,6 +373,7 @@ public:
 	String capture_get_device();
 	void capture_set_device(const String &p_name);
 
+	
 	AudioServer();
 	virtual ~AudioServer();
 };
