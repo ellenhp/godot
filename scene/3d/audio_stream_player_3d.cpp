@@ -495,6 +495,10 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 
 				output.filter_gain = Math::db2linear(db_att);
 
+				if (GLOBAL_GET("audio/enable_resonance_audio")) {
+					ResonanceAudioWrapper::get_singleton()->set_source_attenuation(audio_source_id, Math::db2linear(db_att));
+				}
+
 				//TODO: The lower the second parameter (tightness) the more the sound will "enclose" the listener (more undirected / playing from
 				//      speakers not facing the source) - this could be made distance dependent.
 				_calc_output_vol(local_pos.normalized(), 4.0, output);

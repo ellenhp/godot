@@ -48,9 +48,9 @@ AudioSourceId ResonanceAudioWrapper::register_audio_source() {
 	new_source.id = resonance_api->CreateSoundObjectSource(vraudio::RenderingMode::kBinauralMediumQuality);
 	resonance_api->SetSourceDistanceModel(
 			new_source.id,
-			vraudio::DistanceRolloffModel::kLinear,
+			vraudio::DistanceRolloffModel::kNone,
 			/* min_distance= */ 0,
-			/* max_distance= */ 1000);
+			/* max_distance= */ 0);
 
 	return new_source;
 }
@@ -84,4 +84,8 @@ bool ResonanceAudioWrapper::pull_listener_buffer(int num_frames, AudioFrame *fra
 		memset(frames, 0, num_frames * sizeof(AudioFrame));
 	}
 	return success;
+}
+
+void ResonanceAudioWrapper::set_source_attenuation(AudioSourceId source, float attenuation_linear) {
+	resonance_api->SetSourceDistanceAttenuation(source.id, attenuation_linear);
 }

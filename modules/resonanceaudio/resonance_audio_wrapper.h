@@ -59,6 +59,8 @@ public:
 
 	void push_source_buffer(AudioSourceId source, int num_frames, AudioFrame *frames);
 	bool pull_listener_buffer(int num_frames, AudioFrame *frames);
+
+	void set_source_attenuation(AudioSourceId source, float attenuation_linear);
 };
 
 #endif
