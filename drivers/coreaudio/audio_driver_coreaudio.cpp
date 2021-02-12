@@ -217,7 +217,7 @@ OSStatus AudioDriverCoreAudio::input_callback(void *inRefCon,
 		AudioBufferList *ioData) {
 
 	AudioDriverCoreAudio *ad = (AudioDriverCoreAudio *)inRefCon;
-	if (!ad->active) {
+	if (!ad->active || ad->sleeping) {
 		return 0;
 	}
 
@@ -250,25 +250,48 @@ OSStatus AudioDriverCoreAudio::input_callback(void *inRefCon,
 }
 
 void AudioDriverCoreAudio::start() {
-	if (!active) {
+	if (!active && !sleeping) {
 		OSStatus result = AudioOutputUnitStart(audio_unit);
 		if (result != noErr) {
 			ERR_PRINTS("AudioOutputUnitStart failed, code: " + itos(result));
 		} else {
 			active = true;
 		}
+	} else if (!active && sleeping) {
+		active = true;
 	}
 };
 
 void AudioDriverCoreAudio::stop() {
-	if (active) {
+	if (active && !sleeping) {
 		OSStatus result = AudioOutputUnitStop(audio_unit);
 		if (result != noErr) {
 			ERR_PRINTS("AudioOutputUnitStop failed, code: " + itos(result));
 		} else {
 			active = false;
 		}
+	} else if (active && sleeping) {
+		// Audio stream has already been stopped so only record the new state.
+		active = false;
 	}
+}
+
+void AudioDriverCoreAudio::set_sleep_state(bool p_sleeping) {
+	if (active && !sleeping && p_sleeping) {
+		OSStatus result = AudioOutputUnitStop(audio_unit);
+		if (result != noErr) {
+			ERR_PRINTS("AudioOutputUnitStop failed, code: " + itos(result));
+			return;
+		}
+	}
+	if (active && sleeping && !p_sleeping) {
+		OSStatus result = AudioOutputUnitStart(audio_unit);
+		if (result != noErr) {
+			ERR_PRINTS("AudioOutputUnitStart failed, code: " + itos(result));
+			return;
+		}
+	}
+	sleeping = p_sleeping;
 }
 
 int AudioDriverCoreAudio::get_mix_rate() const {
@@ -310,14 +333,13 @@ void AudioDriverCoreAudio::finish() {
 			ERR_PRINT("AudioUnitSetProperty failed");
 		}
 
-		if (active) {
+		if (active && !sleeping) {
 			result = AudioOutputUnitStop(audio_unit);
 			if (result != noErr) {
 				ERR_PRINT("AudioOutputUnitStop failed");
 			}
-
-			active = false;
 		}
+		active = false;
 
 		result = AudioUnitUninitialize(audio_unit);
 		if (result != noErr) {
@@ -691,6 +713,7 @@ AudioDriverCoreAudio::AudioDriverCoreAudio() :
 		audio_unit(NULL),
 		input_unit(NULL),
 		active(false),
+		sleeping(true),
 		mutex(NULL),
 		device_name("Default"),
 		capture_device_name("Default"),

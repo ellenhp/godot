@@ -67,6 +67,7 @@ public:
 	virtual void lock();
 	virtual void unlock();
 	virtual void finish();
+	virtual void set_sleep_state(bool);
 
 	AudioDriverDummy();
 	~AudioDriverDummy();

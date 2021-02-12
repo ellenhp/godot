@@ -90,6 +90,8 @@ private:
 	float max_distance;
 	float attenuation;
 
+	bool has_playback_lock;
+
 protected:
 	void _validate_property(PropertyInfo &property) const;
 	void _notification(int p_what);

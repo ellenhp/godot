@@ -142,6 +142,8 @@ private:
 
 	float _get_attenuation_db(float p_distance) const;
 
+	bool has_playback_lock;
+
 protected:
 	void _validate_property(PropertyInfo &property) const;
 	void _notification(int p_what);

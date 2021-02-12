@@ -36,6 +36,11 @@
 
 void AudioStreamPlayer2D::_mix_audio() {
 
+	if (!is_playing() && has_playback_lock) {
+		AudioServer::get_singleton()->notify_stopped_playing();
+		has_playback_lock = false;
+	}
+
 	if (!stream_playback.is_valid() || !active ||
 			(stream_paused && !stream_paused_fade_out)) {
 		return;
@@ -157,6 +162,10 @@ void AudioStreamPlayer2D::_notification(int p_what) {
 	if (p_what == NOTIFICATION_EXIT_TREE) {
 
 		AudioServer::get_singleton()->remove_callback(_mix_audios, this);
+		if (has_playback_lock) {
+			AudioServer::get_singleton()->notify_stopped_playing();
+			has_playback_lock = false;
+		}
 	}
 
 	if (p_what == NOTIFICATION_PAUSED) {
@@ -323,6 +332,10 @@ void AudioStreamPlayer2D::play(float p_from_pos) {
 	}
 
 	if (stream_playback.is_valid()) {
+		if (!has_playback_lock) {
+			AudioServer::get_singleton()->notify_playing();
+			has_playback_lock = true;
+		}
 		active = true;
 		setplay = p_from_pos;
 		output_ready = false;
@@ -545,6 +558,7 @@ AudioStreamPlayer2D::AudioStreamPlayer2D() {
 	stream_paused = false;
 	stream_paused_fade_in = false;
 	stream_paused_fade_out = false;
+	has_playback_lock = false;
 	AudioServer::get_singleton()->connect("bus_layout_changed", this, "_bus_layout_changed");
 }
 

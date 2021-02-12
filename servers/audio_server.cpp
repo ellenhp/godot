@@ -33,6 +33,7 @@
 #include "core/io/resource_loader.h"
 #include "core/os/file_access.h"
 #include "core/os/os.h"
+#include "core/os/semaphore.h"
 #include "core/project_settings.h"
 #include "scene/resources/audio_stream_sample.h"
 #include "servers/audio/audio_driver_dummy.h"
@@ -962,6 +963,23 @@ float AudioServer::get_global_rate_scale() const {
 	return global_rate_scale;
 }
 
+void AudioServer::notify_playing() {
+	playing_count_lock->lock();
+	if (playing_count == 0) {
+		AudioDriver::get_singleton()->set_sleep_state(false);
+	}
+	playing_count++;
+	playing_count_lock->unlock();
+}
+void AudioServer::notify_stopped_playing() {
+	playing_count_lock->lock();
+	playing_count--;
+	if (playing_count == 0) {
+		last_audio_activity_usec = OS::get_singleton()->get_ticks_usec();
+	}
+	playing_count_lock->unlock();
+}
+
 void AudioServer::init_channels_and_buffers() {
 	channel_count = get_channel_count();
 	temp_buffer.resize(channel_count);
@@ -991,9 +1009,10 @@ void AudioServer::init() {
 	set_bus_count(1);
 	set_bus_name(0, "Master");
 
-	if (AudioDriver::get_singleton())
+	if (AudioDriver::get_singleton()) {
+		AudioDriver::get_singleton()->set_sleep_state(Engine::get_singleton()->is_editor_hint());
 		AudioDriver::get_singleton()->start();
-
+	}
 #ifdef TOOLS_ENABLED
 	set_edited(false); //avoid editors from thinking this was edited
 #endif
@@ -1066,6 +1085,12 @@ void AudioServer::update() {
 
 		E->get().callback(E->get().userdata);
 	}
+
+	playing_count_lock->lock();
+	if (Engine::get_singleton()->is_editor_hint() && playing_count == 0 && OS::get_singleton()->get_ticks_usec() - last_audio_activity_usec > 15000000) {
+		AudioDriver::get_singleton()->set_sleep_state(true);
+	}
+	playing_count_lock->unlock();
 }
 
 void AudioServer::load_default_bus_layout() {
@@ -1420,6 +1445,9 @@ AudioServer::AudioServer() {
 	mix_time = 0;
 	mix_size = 0;
 	global_rate_scale = 1;
+	last_audio_activity_usec = 0;
+	playing_count = 0;
+	playing_count_lock = Mutex::create();
 }
 
 AudioServer::~AudioServer() {

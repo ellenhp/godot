@@ -96,6 +96,11 @@ void AudioStreamPlayer::_mix_internal(bool p_fadeout) {
 
 void AudioStreamPlayer::_mix_audio() {
 
+	if (!is_playing() && has_playback_lock) {
+		AudioServer::get_singleton()->notify_stopped_playing();
+		has_playback_lock = false;
+	}
+
 	if (use_fadeout) {
 		_mix_to_bus(fadeout_buffer.ptr(), fadeout_buffer.size());
 		use_fadeout = false;
@@ -159,6 +164,10 @@ void AudioStreamPlayer::_notification(int p_what) {
 	if (p_what == NOTIFICATION_EXIT_TREE) {
 
 		AudioServer::get_singleton()->remove_callback(_mix_audios, this);
+		if (has_playback_lock) {
+			AudioServer::get_singleton()->notify_stopped_playing();
+			has_playback_lock = false;
+		}
 	}
 
 	if (p_what == NOTIFICATION_PAUSED) {
@@ -246,6 +255,10 @@ float AudioStreamPlayer::get_pitch_scale() const {
 void AudioStreamPlayer::play(float p_from_pos) {
 
 	if (stream_playback.is_valid()) {
+		if (!has_playback_lock) {
+			AudioServer::get_singleton()->notify_playing();
+			has_playback_lock = true;
+		}
 		//mix_volume_db = volume_db; do not reset volume ramp here, can cause clicks
 		setseek = p_from_pos;
 		stop_has_priority = false;
@@ -440,6 +453,7 @@ AudioStreamPlayer::AudioStreamPlayer() {
 	fadeout_buffer.resize(512);
 	setstop = false;
 	use_fadeout = false;
+	has_playback_lock = false;
 
 	AudioServer::get_singleton()->connect("bus_layout_changed", this, "_bus_layout_changed");
 }

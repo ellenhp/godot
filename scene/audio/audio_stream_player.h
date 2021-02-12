@@ -77,6 +77,8 @@ private:
 	void _bus_layout_changed();
 	void _mix_to_bus(const AudioFrame *p_frames, int p_amount);
 
+	bool has_playback_lock;
+
 protected:
 	void _validate_property(PropertyInfo &property) const;
 	void _notification(int p_what);

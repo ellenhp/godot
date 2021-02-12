@@ -87,6 +87,11 @@ void VideoPlayer::_mix_audios(void *p_self) {
 // Called from audio thread
 void VideoPlayer::_mix_audio() {
 
+	if (!is_playing() && has_playback_lock) {
+		AudioServer::get_singleton()->notify_stopped_playing();
+		has_playback_lock = false;
+	}
+
 	if (!stream.is_valid()) {
 		return;
 	}
@@ -149,7 +154,10 @@ void VideoPlayer::_notification(int p_notification) {
 		case NOTIFICATION_EXIT_TREE: {
 
 			AudioServer::get_singleton()->remove_callback(_mix_audios, this);
-
+			if (has_playback_lock) {
+				AudioServer::get_singleton()->notify_stopped_playing();
+				has_playback_lock = false;
+			}
 		} break;
 
 		case NOTIFICATION_INTERNAL_PROCESS: {
@@ -271,6 +279,11 @@ void VideoPlayer::play() {
 	//	AudioServer::get_singleton()->stream_set_active(stream_rid,true);
 	//	AudioServer::get_singleton()->stream_set_volume_scale(stream_rid,volume);
 	last_audio_time = 0;
+
+	if (!has_playback_lock) {
+		AudioServer::get_singleton()->notify_playing();
+		has_playback_lock = true;
+	}
 };
 
 void VideoPlayer::stop() {
@@ -503,6 +516,8 @@ VideoPlayer::VideoPlayer() {
 
 	wait_resampler = 0;
 	wait_resampler_limit = 2;
+
+	has_playback_lock = false;
 };
 
 VideoPlayer::~VideoPlayer() {

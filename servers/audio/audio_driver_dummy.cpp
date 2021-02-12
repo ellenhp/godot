@@ -125,6 +125,10 @@ void AudioDriverDummy::finish() {
 	thread = NULL;
 };
 
+void AudioDriverDummy::set_sleep_state(bool p_sleeping) {
+	// No-op.
+}
+
 AudioDriverDummy::AudioDriverDummy() {
 
 	mutex = NULL;

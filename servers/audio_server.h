@@ -40,6 +40,7 @@
 class AudioDriverDummy;
 class AudioStream;
 class AudioStreamSample;
+class Semaphore;
 
 class AudioDriver {
 
@@ -96,6 +97,7 @@ public:
 	virtual void lock() = 0;
 	virtual void unlock() = 0;
 	virtual void finish() = 0;
+	virtual void set_sleep_state(bool) = 0;
 
 	virtual Error capture_start() { return FAILED; }
 	virtual Error capture_stop() { return FAILED; }
@@ -260,6 +262,11 @@ private:
 	friend class AudioDriver;
 	void _driver_process(int p_frames, int32_t *p_buffer);
 
+	int32_t playing_count;
+	Mutex *playing_count_lock;
+
+	uint64_t last_audio_activity_usec;
+
 protected:
 	static void _bind_methods();
 
@@ -328,6 +335,9 @@ public:
 
 	void set_global_rate_scale(float p_scale);
 	float get_global_rate_scale() const;
+
+	void notify_playing();
+	void notify_stopped_playing();
 
 	virtual void init();
 	virtual void finish();

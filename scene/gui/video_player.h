@@ -76,6 +76,8 @@ class VideoPlayer : public Control {
 	static int _audio_mix_callback(void *p_udata, const float *p_data, int p_frames);
 	static void _mix_audios(void *p_self);
 
+	bool has_playback_lock;
+
 protected:
 	static void _bind_methods();
 	void _notification(int p_notification);
