@@ -143,6 +143,13 @@ void AudioStreamPlayer3D::_mix_audio() {
 		return;
 	}
 
+	//start playing if requested
+	if (setplay >= 0.0) {
+		setseek = setplay;
+		active = true;
+		setplay = -1;
+	}
+
 	bool started = false;
 	if (setseek >= 0.0) {
 		stream_playback->start(setseek);
@@ -598,13 +605,6 @@ void AudioStreamPlayer3D::_notification(int p_what) {
 
 			output_count = new_output_count;
 			output_ready = true;
-		}
-
-		//start playing if requested
-		if (setplay >= 0.0) {
-			setseek = setplay;
-			active = true;
-			setplay = -1;
 		}
 
 		//stop playing if no longer active

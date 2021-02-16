@@ -40,6 +40,13 @@ void AudioStreamPlayer2D::_mix_audio() {
 		return;
 	}
 
+	//start playing if requested
+	if (setplay >= 0.0) {
+		setseek = setplay;
+		active = true;
+		setplay = -1;
+	}
+
 	if (setseek >= 0.0) {
 		stream_playback->start(setseek);
 		setseek = -1.0; //reset seek
@@ -242,13 +249,6 @@ void AudioStreamPlayer2D::_notification(int p_what) {
 
 			output_count = new_output_count;
 			output_ready = true;
-		}
-
-		//start playing if requested
-		if (setplay >= 0.0) {
-			setseek = setplay;
-			active = true;
-			setplay = -1;
 		}
 
 		//stop playing if no longer active
