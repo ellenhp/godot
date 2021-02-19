@@ -104,6 +104,19 @@ void AudioStreamPlayer::_mix_audio() {
 		return;
 	}
 
+	if (setseek >= 0.0 && !stop_has_priority) {
+		if (stream_playback->is_playing()) {
+			//fade out to avoid pops
+			_mix_internal(true);
+		}
+
+		stream_playback->start(setseek);
+		setseek = -1.0; //reset seek
+		mix_volume_db = volume_db; //reset ramp
+	}
+
+	stop_has_priority = false;
+
 	if (stream_paused) {
 		if (stream_paused_fade) {
 			_mix_internal(true);
@@ -117,19 +130,6 @@ void AudioStreamPlayer::_mix_audio() {
 		stream_playback->stop();
 		setstop = false;
 	}
-
-	if (setseek >= 0.0 && !stop_has_priority) {
-		if (stream_playback->is_playing()) {
-			//fade out to avoid pops
-			_mix_internal(true);
-		}
-
-		stream_playback->start(setseek);
-		setseek = -1.0; //reset seek
-		mix_volume_db = volume_db; //reset ramp
-	}
-
-	stop_has_priority = false;
 
 	_mix_internal(false);
 }
