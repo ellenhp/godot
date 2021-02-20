@@ -35,6 +35,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef NO_LINK_MAIN
+
 int main(int argc, char **argv) {
 #if defined(VULKAN_ENABLED)
 	// MoltenVK - enable full component swizzling support
@@ -82,3 +84,5 @@ int main(int argc, char **argv) {
 
 	return os.get_exit_code();
 };
+
+#endif

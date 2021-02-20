@@ -108,7 +108,7 @@ opts = Variables(customs, ARGUMENTS)
 opts.Add("p", "Platform (alias for 'platform')", "")
 opts.Add("platform", "Target platform (%s)" % ("|".join(platform_list),), "")
 opts.Add(BoolVariable("tools", "Build the tools (a.k.a. the Godot editor)", True))
-opts.Add(EnumVariable("target", "Compilation target", "debug", ("debug", "release_debug", "release")))
+opts.Add(EnumVariable("target", "Compilation target", "debug", ("debug", "release_debug", "release", "fuzz")))
 opts.Add("arch", "Platform-dependent architecture (arm/arm64/x86/x64/mips/...)", "")
 opts.Add(EnumVariable("bits", "Target platform bits", "default", ("default", "32", "64")))
 opts.Add(EnumVariable("optimize", "Optimization type", "speed", ("speed", "size")))
@@ -524,6 +524,14 @@ if selected_platform in platform_list:
             suffix += ".opt.tools"
         else:
             suffix += ".opt.debug"
+    elif env["target"] == "fuzz":
+        env.Append(CPPDEFINES=["NO_LINK_MAIN"])
+        env.Append(CCFLAGS=["-fsanitize=fuzzer,address"])
+        env.Append(LINKFLAGS=["-fsanitize=fuzzer,address"])
+        if env["tools"]:
+            suffix += ".fuzz.tools"
+        else:
+            suffix += ".fuzz.debug"
     else:
         if env["tools"]:
             suffix += ".tools"
